@@ -260,6 +260,26 @@ CREATE TABLE bus_locations (
   timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Announcements
+CREATE TABLE announcements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  school_id UUID REFERENCES schools(id) ON DELETE CASCADE,
+  bus_id UUID REFERENCES buses(id) ON DELETE CASCADE, -- Null if sent to all
+  sender_id UUID REFERENCES auth.users(id),
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Attendance (Daily)
+CREATE TABLE attendance (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  bus_id UUID REFERENCES buses(id) ON DELETE CASCADE,
+  status TEXT CHECK (status IN ('boarded', 'absent')),
+  date DATE DEFAULT CURRENT_DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create index for real-time queries
 CREATE INDEX idx_bus_locations_bus_id ON bus_locations(bus_id, timestamp DESC);
 ```
@@ -304,28 +324,30 @@ CREATE INDEX idx_bus_locations_bus_id ON bus_locations(bus_id, timestamp DESC);
 - Sidebar navigation (Overview, Buses, Students, Routes, Analytics)
 - Bus management (table + modals for add/edit/assign driver)
 - Student management (table + add form with Mapbox geocoding)
-- Route visualization on Mapbox (color-coded per bus)
-- Auto-assignment: suggest bus based on capacity + proximity
+- Route & Cluster visualization on Mapbox (color-coded per bus)
+- Smart Placement: Auto-assign students to the absolute nearest viable cluster/bus
+- Push Announcements: Send updates to specific drivers or the whole fleet
+- Advanced Analytics: Bird's-eye metrics covering all vehicle capacity and student metrics
 
 ### Phase 6: AI Route Optimization
 - Supabase Edge Function (or Next.js API route)
-- Nearest-neighbor heuristic for MVP (upgradeable to OR-Tools later)
+- Hybrid clustering and Nearest-Neighbor heuristic
 - Accepts student locations + school starting point → returns optimized route
 - Recalculates on student add/remove
 - Capacity alerts when bus > 40 students
 
 ### Phase 7: Bus Driver Interface
-- Mobile-first layout
-- Show assigned route + stops list
+- Mobile-first layout emphasizing turn-by-turn navigation follow-along
+- Show assigned route + passenger manifest
+- Feature digital attendance checklist (Boarded / Absent log)
 - "Start Route" button → simulated GPS broadcasting
-- Simulated movement along route with `setInterval`
-- Writes position to `bus_locations` table via Supabase
+- Push Announcements: Send real-time text updates securely to parents on that route
 
 ### Phase 8: Parent Tracking View
 - Full-screen Mapbox map (mobile-first)
 - Real-time bus position via Supabase Realtime (`bus_locations`)
 - Child's stop highlighted with ETA countdown
-- Route progress bar
+- View real-time driver announcements and attendance confirmation
 - Bottom card: child name, bus number, ETA, status
 
 ### Phase 9: Polish & Production

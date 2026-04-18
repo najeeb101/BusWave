@@ -41,25 +41,25 @@ Build a full SaaS platform with a landing page, authentication, and role-based d
 
 - Sidebar navigation: Overview, Buses, Students, Routes, Analytics.
 - Bus management: Add/edit buses, set capacity, assign drivers.
-- Student management: Add students with home address (geocoded via Mapbox), assign to buses.
-- Route management: View optimized routes on Mapbox, including bus stops and order.
-- Auto-assignment: Suggest bus assignment based on capacity and proximity when students are added.
-- Route visualization: Color-coded route lines and stop markers on Mapbox.
+- Student management: Add students with home address (geocoded via Mapbox).
+- Smart Placement: Automatically assign new students to the nearest geographical route cluster.
+- Route visualization: Color-coded active routes, clusters, and stop markers on Mapbox.
+- Communications: Push out announcements to drivers natively.
+- Analytics Panel: Macro metrics of active buses, student counts, and vehicle load.
 
 ## Phase 6: AI Route Optimization (Edge Function)
 
-- Edge function takes student locations and school starting point to calculate optimized routes.
-- Uses nearest-neighbor heuristic for stop ordering (simulated AI for MVP).
-- Recalculates routes when students are added or removed.
-- Returns ordered stops with estimated arrival times.
-- Capacity check alerts when a bus exceeds 40 students.
+- Edge function takes student locations and calculates geospatial clusters.
+- Uses routing algorithms to order the clustered stops logically.
+- Recalculates dynamically when new students are placed.
+- Formulates the persistent route for drivers to simply follow turn-by-turn.
 
 ## Phase 7: Bus Driver View
 
-- Mobile-friendly page showing assigned route and stops.
-- "Start Route" button begins simulated GPS broadcasting.
-- Simulated movement interpolates bus position along route at realistic speed.
-- Position updates are written to `bus_locations` via Supabase.
+- Mobile-friendly page showing the exact navigational path dictated by the DB.
+- Digital Attendance: Tap to mark a student as Boarded or Absent.
+- Push Announcements: Send rapid updates to parents on that bus string.
+- "Start Route" button begins simulated GPS broadcasting along the path.
 
 ## Phase 8: Parent Tracking View
 

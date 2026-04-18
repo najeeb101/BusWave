@@ -12,11 +12,14 @@ RouteyAI is a SaaS platform that uses AI to optimize school bus routes and provi
 
 ## Key Features
 
-- 🧠 **AI Route Optimization** — Automatically calculate the shortest, most efficient bus routes
+- 🧠 **AI Route Optimization** — Automatically calculate the shortest, most efficient bus routes via smart clustering
 - 📍 **Real-Time Tracking** — Parents track their child's bus live on a map with ETA
+- 📢 **Announcements & Alerts** — Push communication between schools, drivers, and parents
 - 🏫 **Multi-School Support** — Each school gets its own dashboard and management tools
-- 🚍 **Fleet Management** — Add buses, assign drivers, manage capacity
-- 👨‍🎓 **Student Management** — Register students, geocode addresses, auto-assign to buses
+- 📊 **Advanced Analytics** — Fleet metrics, driver capacity, and visual routing clusters for School Admins
+- 🚍 **Fleet Management** — Add buses, assign drivers, manage capacity seamlessly
+- 👨‍🎓 **Student Management** — Register students, geocode addresses, and let the AI auto-assign to the nearest optimal route
+- ✅ **Driver Utility** — Turn-by-turn routing execution and digital attendance (boarded/absent) manifest
 - 📱 **Mobile-First** — Driver and parent interfaces optimized for phones
 - 🔒 **Role-Based Access** — Platform Admin, School Admin, Driver, and Parent roles
 
