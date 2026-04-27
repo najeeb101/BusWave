@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { FeedbackSection } from '@/components/FeedbackSection'
+import { DashboardPreview } from '@/components/DashboardPreview'
+import { MobileAppsSection } from '@/components/MobileApps'
 
 const NAV_LINKS = [
   { label: 'Dashboard', href: '#dashboard' },
@@ -282,10 +284,10 @@ export default function HomePage() {
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
           <Link
-            href="/school"
+            href="/signup"
             className="group bg-[#1E3A8A] text-white px-8 py-4 rounded-2xl text-sm font-bold hover:bg-[#1e40af] dark:bg-blue-600 dark:hover:bg-blue-500 transition-all hover:shadow-[0_8px_20px_-4px_rgba(30,58,138,0.5)] dark:hover:shadow-[0_8px_20px_-4px_rgba(59,130,246,0.3)] hover:-translate-y-0.5 flex items-center gap-2"
           >
-            Open Admin Dashboard
+            Get Started Free
             <span className="transition-transform group-hover:translate-x-1">→</span>
           </Link>
           <button
@@ -300,129 +302,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Map illustration */}
-      <section id="dashboard" className="max-w-4xl mx-auto px-6 mb-16 scroll-mt-24">
-        <div className="bg-white dark:bg-slate-900 border border-[#E2E8F0] dark:border-slate-800 rounded-3xl shadow-[0_8px_40px_-12px_rgb(0_0_0/0.12)] dark:shadow-none overflow-hidden">
-          <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#F1F5F9] dark:border-slate-800/50">
-            {['#FF5F57','#FEBC2E','#28C840'].map(c => (
-              <div key={c} className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />
-            ))}
-            <span className="ml-2 text-[11px] text-[#94A3B8] dark:text-slate-500">RouteyAI — Admin Dashboard · Fleet Overview</span>
-          </div>
-          <div className="relative bg-[#e8edf2] dark:bg-slate-800" style={{ height: 320 }}>
-            <svg width="100%" height="320" viewBox="0 0 900 320" preserveAspectRatio="xMidYMid slice">
-              <rect width="900" height="320" className="fill-[#e8edf2] dark:fill-slate-800" />
-              {[100,200,300,400,500,600,700,800].map(x => (
-                <line key={x} x1={x} y1="0" x2={x} y2="320" className="stroke-[#d1d9e0] dark:stroke-slate-700" strokeWidth={x===450?14:7}/>
-              ))}
-              {[80,160,240].map(y => (
-                <line key={y} x1="0" y1={y} x2="900" y2={y} className="stroke-[#d1d9e0] dark:stroke-slate-700" strokeWidth={y===160?14:7}/>
-              ))}
-              {[
-                [105,85,85,65],[205,85,85,65],[305,85,85,65],[505,85,85,65],[605,85,85,65],[705,85,85,65],
-                [105,170,85,60],[205,170,85,60],[305,170,85,60],[505,170,85,60],[605,170,85,60],[705,170,85,60],
-              ].map(([x,y,w,h],i) => (
-                <rect key={i} x={x} y={y} width={w} height={h} rx="4" className="fill-[#cdd7e0] dark:fill-slate-700" opacity="0.55"/>
-              ))}
-              <rect x="405" y="85" width="85" height="65" rx="4" fill="#b8d9b8" className="dark:fill-emerald-900" opacity="0.7"/>
-              <path d="M50 160 Q100 160 100 80 Q100 20 200 20 Q300 20 300 80 Q300 160 450 160" stroke="#3B82F6" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.85"/>
-              <path d="M450 160 Q600 160 600 80 Q600 20 700 20 Q800 20 800 80 Q800 160 860 160" stroke="#10B981" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.85"/>
-              <path d="M100 300 Q100 240 200 240 Q300 240 300 160 Q300 80 450 80" stroke="#F59E0B" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.85" strokeDasharray="8 4"/>
-              <path d="M700 300 Q700 240 800 240 Q860 240 860 160" stroke="#8B5CF6" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.85"/>
-              <g transform="translate(450,160)">
-                <circle r="20" fill="#1E3A8A" className="dark:fill-blue-500" stroke="#fff" strokeWidth="3.5"/>
-                <rect x="-10" y="-9" width="20" height="18" rx="1.5" fill="#fff" opacity="0.9"/>
-                <rect x="-6" y="-9" width="12" height="4" rx="1" fill="#1E3A8A" className="dark:fill-blue-500"/>
-              </g>
-              <text x="450" y="196" textAnchor="middle" fontSize="11" fill="#1E3A8A" className="dark:fill-blue-300" fontWeight="700">Al Nour School</text>
-              {[{cx:200,cy:20,c:'#3B82F6',n:3},{cx:300,cy:160,c:'#10B981',n:7},{cx:700,cy:160,c:'#8B5CF6',n:5}].map(b=>(
-                <g key={b.n} transform={`translate(${b.cx},${b.cy})`}>
-                  <circle r="18" fill={b.c} stroke="#fff" strokeWidth="3"/>
-                  <text textAnchor="middle" y="6" fontSize="13" fill="#fff" fontWeight="700">#{b.n}</text>
-                </g>
-              ))}
-              <g transform="translate(550,240)">
-                <circle r="18" fill="#94A3B8" className="dark:fill-slate-600" stroke="#fff" strokeWidth="3"/>
-                <text textAnchor="middle" y="6" fontSize="13" fill="#fff" fontWeight="700">#12</text>
-              </g>
-              <text x="895" y="316" textAnchor="end" fontSize="9" fill="#94A3B8" className="dark:fill-slate-500">Map simulation</text>
-            </svg>
-            <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-xl px-3 py-2.5 border border-[#E2E8F0]/80 dark:border-slate-700">
-              <div className="text-[10px] font-bold text-[#0F172A] dark:text-slate-200 mb-2 uppercase tracking-wide">Active Routes</div>
-              {[['Route A','#3B82F6'],['Route B','#10B981'],['Route C','#F59E0B'],['Route D','#8B5CF6']].map(([n,c])=>(
-                <div key={n} className="flex items-center gap-2 mb-1 last:mb-0">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{background:c}}/>
-                  <span className="text-[11px] text-[#64748B] dark:text-slate-400">{n}</span>
-                </div>
-              ))}
-            </div>
-            <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 text-[11px] font-bold text-[#10B981] border border-[#E2E8F0]/80 dark:border-slate-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse block"/>
-              Live
-            </div>
-          </div>
-        </div>
-        <p className="text-center text-[12px] text-[#94A3B8] dark:text-slate-500 mt-3">School admin web dashboard — manage fleet, routes & students</p>
+      {/* Dashboard preview */}
+      <section id="dashboard" className="max-w-5xl mx-auto px-6 mb-16 scroll-mt-24">
+        <DashboardPreview />
+        <p className="text-center text-[12px] text-[#94A3B8] dark:text-slate-500 mt-3">School admin web dashboard — live fleet, routes & real-time ETAs</p>
       </section>
 
-      {/* Two surfaces section */}
-      <section id="solutions" className="max-w-6xl mx-auto px-6 mb-16 scroll-mt-24">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-extrabold text-[#0F172A] dark:text-white tracking-tight mb-3">Two surfaces. One platform.</h2>
-          <p className="text-[#64748B] dark:text-slate-400 text-base">The right experience for every role — web for admins, mobile for everyone else.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-          {/* Admin — web */}
-          <Link
-            href="/school"
-            className="bg-white dark:bg-slate-900 rounded-3xl border border-[#E2E8F0] dark:border-slate-800 shadow-sm p-8 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] dark:hover:shadow-none hover:border-[#BFDBFE] dark:hover:border-blue-500 transition-all duration-300 hover:-translate-y-1 group"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] dark:bg-blue-950/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#1E3A8A] dark:text-blue-400" strokeWidth="1.75" strokeLinecap="round">
-                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-            </div>
-            <div className="inline-flex items-center gap-1.5 bg-[#EFF6FF] dark:bg-blue-950/40 text-[#1E3A8A] dark:text-blue-400 text-[10px] font-bold px-2.5 py-1 rounded-full mb-3 uppercase tracking-wide">Web</div>
-            <div className="text-lg font-extrabold text-[#0F172A] dark:text-white mb-2">School Admin</div>
-            <p className="text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">Fleet overview, route optimization, student roster, and analytics — all in one desktop dashboard.</p>
-            <div className="text-sm font-bold text-[#1E3A8A] dark:text-blue-400 flex items-center gap-1 group-hover:gap-2 transition-all">Open Dashboard <span className="text-lg">→</span></div>
-          </Link>
-
-          {/* Driver — mobile */}
-          <button
-            onClick={() => setShowAppModal(true)}
-            className="bg-white dark:bg-slate-900 rounded-3xl border border-[#E2E8F0] dark:border-slate-800 shadow-sm p-8 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] dark:hover:shadow-none hover:border-[#A7F3D0] dark:hover:border-emerald-500 transition-all duration-300 hover:-translate-y-1 text-left group"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-[#F0FDF4] dark:bg-emerald-950/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#059669] dark:text-emerald-400" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/>
-                <path d="M18 18h3s.5-1.7.8-4.3c.3-2.7.2-7.7.2-7.7H2S1.7 7 2 9.7c.3 2.6.8 4.3.8 4.3H5"/>
-                <circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>
-              </svg>
-            </div>
-            <div className="inline-flex items-center gap-1.5 bg-[#F0FDF4] dark:bg-emerald-950/40 text-[#059669] dark:text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full mb-3 uppercase tracking-wide">Mobile App</div>
-            <div className="text-lg font-extrabold text-[#0F172A] dark:text-white mb-2">Driver</div>
-            <p className="text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">Route navigation, per-stop student check-in, and real-time messages from the school — all on your phone.</p>
-            <div className="text-sm font-bold text-[#059669] dark:text-emerald-400 flex items-center gap-1 group-hover:gap-2 transition-all">Download App <span className="text-lg">→</span></div>
-          </button>
-
-          {/* Parent — mobile */}
-          <button
-            onClick={() => setShowAppModal(true)}
-            className="bg-white dark:bg-slate-900 rounded-3xl border border-[#E2E8F0] dark:border-slate-800 shadow-sm p-8 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] dark:hover:shadow-none hover:border-[#DDD6FE] dark:hover:border-purple-500 transition-all duration-300 hover:-translate-y-1 text-left group"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-[#F5F3FF] dark:bg-purple-950/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#7C3AED] dark:text-purple-400" strokeWidth="1.75" strokeLinecap="round">
-                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-            </div>
-            <div className="inline-flex items-center gap-1.5 bg-[#F5F3FF] dark:bg-purple-950/40 text-[#7C3AED] dark:text-purple-400 text-[10px] font-bold px-2.5 py-1 rounded-full mb-3 uppercase tracking-wide">Mobile App</div>
-            <div className="text-lg font-extrabold text-[#0F172A] dark:text-white mb-2">Parent</div>
-            <p className="text-[#64748B] dark:text-slate-400 leading-relaxed mb-6">Live bus tracking, boarding confirmation, ETA to school, and instant absence alerts — right in your pocket.</p>
-            <div className="text-sm font-bold text-[#7C3AED] dark:text-purple-400 flex items-center gap-1 group-hover:gap-2 transition-all">Download App <span className="text-lg">→</span></div>
-          </button>
-        </div>
-      </section>
+      <MobileAppsSection onDownloadClick={() => setShowAppModal(true)} />
 
       {/* Features grid */}
       <section id="features" className="max-w-6xl mx-auto px-6 mb-20 scroll-mt-24">
@@ -505,7 +391,7 @@ export default function HomePage() {
             <div>
               <h3 className="text-white font-bold mb-5 tracking-wide">Quick Links</h3>
               <ul className="space-y-3">
-                <li><Link href="/school" className="text-slate-400 hover:text-blue-400 text-sm transition-colors">Admin Dashboard</Link></li>
+                <li><Link href="/login" className="text-slate-400 hover:text-blue-400 text-sm transition-colors">Admin Dashboard</Link></li>
                 <li><button onClick={() => setShowAppModal(true)} className="text-slate-400 hover:text-blue-400 text-sm transition-colors">Driver App</button></li>
                 <li><button onClick={() => setShowAppModal(true)} className="text-slate-400 hover:text-blue-400 text-sm transition-colors">Parent Portal</button></li>
                 <li><Link href="#" className="text-slate-400 hover:text-blue-400 text-sm transition-colors">Pricing & Plans</Link></li>

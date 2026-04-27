@@ -29,6 +29,10 @@ const BUS_DOT: Record<string, string> = {
 
 export default function SchoolOverviewPage() {
   const [announcementOpen, setAnnouncementOpen] = useState(false)
+  const [announceTo, setAnnounceTo] = useState('All buses & parents')
+  const [announceMsg, setAnnounceMsg] = useState('')
+  const [announceSending, setAnnounceSending] = useState(false)
+  const [announceSent, setAnnounceSent] = useState(false)
 
   return (
     <div className="p-7 max-w-[1280px]">
@@ -155,43 +159,94 @@ export default function SchoolOverviewPage() {
       {announcementOpen && (
         <div
           className="fixed inset-0 bg-[#0F172A]/45 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={() => setAnnouncementOpen(false)}
+          onClick={() => { if (!announceSending) { setAnnouncementOpen(false); setAnnounceSent(false); setAnnounceMsg('') } }}
         >
           <div
             className="bg-white rounded-2xl p-6 w-[480px] shadow-[0_20px_60px_-15px_rgb(0_0_0/0.3)]"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-5">
-              <span className="text-lg font-bold text-[#0F172A]">Send Announcement</span>
-              <button onClick={() => setAnnouncementOpen(false)} className="w-7 h-7 bg-[#F1F5F9] rounded-lg flex items-center justify-center text-[#64748B]">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">Send to</label>
-                <select className="w-full border border-[#E2E8F0] rounded-xl py-2.5 px-3 text-sm text-[#0F172A] bg-[#FAFAFA] outline-none">
-                  <option>All buses & parents</option>
-                  <option>Bus #3 — Route A</option>
-                  <option>Bus #7 — Route B</option>
-                  <option>Bus #5 — Route D</option>
-                </select>
+            {announceSent ? (
+              <div className="flex flex-col items-center py-4 text-center">
+                <div className="w-14 h-14 rounded-full bg-[#D1FAE5] border border-[#6EE7B7] flex items-center justify-center mb-4">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-[#0F172A] mb-1">Announcement Sent</h3>
+                <p className="text-sm text-[#64748B] mb-1">Delivered to <span className="font-semibold text-[#0F172A]">{announceTo}</span></p>
+                <p className="text-xs text-[#94A3B8] mb-6">All parents and drivers have been notified.</p>
+                <button
+                  onClick={() => { setAnnouncementOpen(false); setAnnounceSent(false); setAnnounceMsg('') }}
+                  className="bg-[#1E3A8A] text-white rounded-lg px-6 py-2 text-sm font-semibold"
+                >
+                  Done
+                </button>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">Message</label>
-                <textarea
-                  rows={3}
-                  placeholder="Type your announcement…"
-                  className="w-full border border-[#E2E8F0] rounded-xl py-2.5 px-3 text-sm text-[#0F172A] bg-[#FAFAFA] outline-none resize-none"
-                />
-              </div>
-              <div className="flex gap-2 justify-end mt-1">
-                <button onClick={() => setAnnouncementOpen(false)} className="bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
-                <button onClick={() => setAnnouncementOpen(false)} className="bg-[#1E3A8A] text-white rounded-lg px-4 py-2 text-sm font-semibold">Send</button>
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-5">
+                  <span className="text-lg font-bold text-[#0F172A]">Send Announcement</span>
+                  <button
+                    onClick={() => setAnnouncementOpen(false)}
+                    className="w-7 h-7 bg-[#F1F5F9] rounded-lg flex items-center justify-center text-[#64748B] hover:bg-[#E2E8F0] transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">Send to</label>
+                    <select
+                      value={announceTo}
+                      onChange={e => setAnnounceTo(e.target.value)}
+                      className="w-full border border-[#E2E8F0] rounded-xl py-2.5 px-3 text-sm text-[#0F172A] bg-[#FAFAFA] outline-none"
+                    >
+                      <option>All buses &amp; parents</option>
+                      <option>Bus #3 — Route A</option>
+                      <option>Bus #7 — Route B</option>
+                      <option>Bus #5 — Route D</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">Message</label>
+                    <textarea
+                      rows={3}
+                      value={announceMsg}
+                      onChange={e => setAnnounceMsg(e.target.value)}
+                      placeholder="Type your announcement…"
+                      className="w-full border border-[#E2E8F0] rounded-xl py-2.5 px-3 text-sm text-[#0F172A] bg-[#FAFAFA] outline-none resize-none focus:border-[#3B82F6] transition-colors"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end mt-1">
+                    <button onClick={() => setAnnouncementOpen(false)} className="bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
+                    <button
+                      disabled={!announceMsg.trim() || announceSending}
+                      onClick={() => {
+                        setAnnounceSending(true)
+                        setTimeout(() => { setAnnounceSending(false); setAnnounceSent(true) }, 1500)
+                      }}
+                      className="bg-[#1E3A8A] text-white rounded-lg px-4 py-2 text-sm font-semibold flex items-center gap-2 disabled:opacity-60 transition-opacity"
+                    >
+                      {announceSending ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Sending…
+                        </>
+                      ) : (
+                        <>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                          </svg>
+                          Send
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
