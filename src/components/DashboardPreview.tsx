@@ -1,4 +1,5 @@
 'use client'
+import { motion } from 'framer-motion'
 
 const RA = "M 55,35 C 90,35 110,65 135,95 C 155,120 200,145 250,160 C 268,165 280,168 290,170"
 const RB = "M 510,50 C 480,65 455,85 430,105 C 395,128 360,148 325,160 C 308,165 298,168 290,170"
@@ -149,18 +150,34 @@ export function DashboardPreview() {
                 <path d={RD} stroke="#8B5CF6" strokeWidth="9" fill="none" opacity="0.13" strokeLinecap="round"/>
 
                 {/* Animated dashed route lines */}
-                <path d={RA} stroke="#3B82F6" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5">
-                  <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1s" repeatCount="indefinite"/>
-                </path>
-                <path d={RB} stroke="#10B981" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5">
-                  <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.2s" repeatCount="indefinite"/>
-                </path>
-                <path d={RC} stroke="#F59E0B" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5">
-                  <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="0.85s" repeatCount="indefinite"/>
-                </path>
-                <path d={RD} stroke="#8B5CF6" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5">
-                  <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.1s" repeatCount="indefinite"/>
-                </path>
+                <motion.path 
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 2, delay: 0.5 }}
+                  d={RA} stroke="#3B82F6" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5"
+                />
+                <motion.path 
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 2, delay: 0.7 }}
+                  d={RB} stroke="#10B981" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5"
+                />
+                <motion.path 
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 2, delay: 0.9 }}
+                  d={RC} stroke="#F59E0B" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5"
+                />
+                <motion.path 
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 2, delay: 1.1 }}
+                  d={RD} stroke="#8B5CF6" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeDasharray="7 5"
+                />
 
                 {/* Stop pins */}
                 {STOPS.map((s,i)=>(
@@ -171,11 +188,12 @@ export function DashboardPreview() {
                 ))}
 
                 {/* School marker + pulse ring */}
-                <circle cx="290" cy="170" r="26" fill="#1E3A8A" opacity="0">
-                  <animate attributeName="r"       values="18;30;18" dur="2.4s" repeatCount="indefinite"/>
-                  <animate attributeName="opacity"  values="0.18;0;0.18" dur="2.4s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="290" cy="170" r="16" fill="#1E3A8A" stroke="white" strokeWidth="2.5"/>
+                <motion.circle 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: [1, 1.1, 1], opacity: 1 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  cx="290" cy="170" r="16" fill="#1E3A8A" stroke="white" strokeWidth="2.5"
+                />
                 <text x="290" y="167" textAnchor="middle" fontSize="6.5" fill="white" fontWeight="700" letterSpacing="0.4">AL NOUR</text>
                 <text x="290" y="176" textAnchor="middle" fontSize="5.5" fill="rgba(255,255,255,0.65)">SCHOOL</text>
 

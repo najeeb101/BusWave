@@ -1,33 +1,46 @@
-'use client'
-
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 
-const SCHOOLS = [
-  { id: 1, name: 'Doha International Academy',  city: 'West Bay, Doha',    buses: 3, students: 40, admin: 'Sara Al-Mannai',    joined: 'Jan 2024' },
-  { id: 2, name: 'Al Nour International School', city: 'Al Sadd, Doha',    buses: 4, students: 62, admin: 'Khalid Al-Rashidi', joined: 'Mar 2024' },
-  { id: 3, name: 'Lusail STEM Academy',          city: 'Lusail City',      buses: 2, students: 28, admin: 'Mariam Al-Jaber',   joined: 'Apr 2024' },
-  { id: 4, name: 'Education City Primary',       city: 'Education City',   buses: 5, students: 87, admin: 'Ahmed Al-Kaabi',   joined: 'Apr 2024' },
-]
+type SchoolRow = {
+  id: string
+  name: string
+  address: string
+  created_at: string
+  bus_count: number
+  student_count: number
+  admin_name: string | null
+  admin_email: string | null
+}
 
-const ACTIVITY = [
-  { time: '9:14 AM', msg: 'Lusail STEM Academy signed up — awaiting school setup',        type: 'info'  },
-  { time: '8:57 AM', msg: 'Education City Primary: Bus #5 added by Ahmed Al-Kaabi',       type: 'ok'    },
-  { time: '8:31 AM', msg: 'Al Nour Intl School: 3 new students added to Route B',         type: 'ok'    },
-  { time: '7:50 AM', msg: 'Doha International Academy: capacity warning on Bus #3',        type: 'warn'  },
-  { time: '7:22 AM', msg: 'Platform: 4 schools active, morning routes underway',           type: 'info'  },
-]
+type PlatformStats = {
+  school_count: number
+  bus_count: number
+  student_count: number
+  admin_count: number
+}
 
-const DOT: Record<string, string> = { ok: '#10B981', warn: '#F59E0B', info: '#3B82F6' }
+export default async function AdminOverviewPage() {
+  const supabase = createClient()
 
-export default function AdminOverviewPage() {
+  const [statsResult, schoolsResult] = await Promise.all([
+    supabase.rpc('get_platform_stats'),
+    supabase.rpc('get_schools_with_admins'),
+  ])
+
+  const stats = statsResult.data as PlatformStats | null
+  const schools = (schoolsResult.data ?? []) as SchoolRow[]
+
   return (
     <div className="p-7 max-w-[1280px]">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#0F172A] leading-tight">Platform Overview</h1>
-          <p className="text-sm text-[#64748B] mt-0.5">RouteyAI · All schools · {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p className="text-sm text-[#64748B] mt-0.5">
+            RouteyAI · All schools ·{' '}
+            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
         </div>
         <Link
           href="/admin/schools"
@@ -44,8 +57,8 @@ export default function AdminOverviewPage() {
       <div className="grid grid-cols-4 gap-4 mb-6">
         <StatsCard
           label="Total Schools"
-          value="4"
-          sub="1 added this month"
+          value={String(stats?.school_count ?? '—')}
+          sub={`${schools.length} registered`}
           color="#1E3A8A"
           icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" strokeWidth="1.75" strokeLinecap="round">
@@ -56,8 +69,8 @@ export default function AdminOverviewPage() {
         />
         <StatsCard
           label="Total Buses"
-          value="14"
-          sub="11 active today"
+          value={String(stats?.bus_count ?? '—')}
+          sub="Across all schools"
           color="#3B82F6"
           icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -69,7 +82,7 @@ export default function AdminOverviewPage() {
         />
         <StatsCard
           label="Total Students"
-          value="217"
+          value={String(stats?.student_count ?? '—')}
           sub="Across all schools"
           color="#10B981"
           icon={
@@ -81,7 +94,7 @@ export default function AdminOverviewPage() {
         />
         <StatsCard
           label="School Admins"
-          value="4"
+          value={String(stats?.admin_count ?? '—')}
           sub="All verified"
           color="#8B5CF6"
           icon={
@@ -92,56 +105,47 @@ export default function AdminOverviewPage() {
         />
       </div>
 
-      {/* Schools table + activity */}
-      <div className="grid grid-cols-[1fr_320px] gap-5">
-        {/* Schools table */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-[0_1px_2px_0_rgb(0_0_0/0.04)]">
-          <div className="flex justify-between items-center px-5 py-4 border-b border-[#F1F5F9]">
-            <span className="text-sm font-bold text-[#0F172A]">Schools</span>
-            <Link href="/admin/schools" className="text-xs text-[#64748B] hover:text-[#0F172A]">Manage all →</Link>
-          </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#F1F5F9]">
-                <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">School</th>
-                <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Admin</th>
-                <th className="text-center px-3 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Buses</th>
-                <th className="text-center px-3 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Students</th>
-                <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Joined</th>
+      {/* Schools table */}
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-[0_1px_2px_0_rgb(0_0_0/0.04)]">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-[#F1F5F9]">
+          <span className="text-sm font-bold text-[#0F172A]">Schools</span>
+          <Link href="/admin/schools" className="text-xs text-[#64748B] hover:text-[#0F172A]">Manage all →</Link>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[#F1F5F9]">
+              <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">School</th>
+              <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Admin</th>
+              <th className="text-center px-3 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Buses</th>
+              <th className="text-center px-3 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Students</th>
+              <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schools.slice(0, 5).map((s, i) => (
+              <tr key={s.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}>
+                <td className="px-5 py-3.5">
+                  <div className="font-semibold text-[#0F172A] text-[13px]">{s.name}</div>
+                  <div className="text-[11px] text-[#94A3B8]">{s.address}</div>
+                </td>
+                <td className="px-5 py-3.5 text-[13px] text-[#64748B]">{s.admin_name ?? '—'}</td>
+                <td className="px-3 py-3.5 text-center text-[13px] font-semibold text-[#0F172A]">{s.bus_count}</td>
+                <td className="px-3 py-3.5 text-center text-[13px] font-semibold text-[#0F172A]">{s.student_count}</td>
+                <td className="px-5 py-3.5 text-[12px] text-[#94A3B8]">
+                  {new Date(s.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {SCHOOLS.map((s, i) => (
-                <tr key={s.id} className={i % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}>
-                  <td className="px-5 py-3.5">
-                    <div className="font-semibold text-[#0F172A] text-[13px]">{s.name}</div>
-                    <div className="text-[11px] text-[#94A3B8]">{s.city}</div>
-                  </td>
-                  <td className="px-5 py-3.5 text-[13px] text-[#64748B]">{s.admin}</td>
-                  <td className="px-3 py-3.5 text-center text-[13px] font-semibold text-[#0F172A]">{s.buses}</td>
-                  <td className="px-3 py-3.5 text-center text-[13px] font-semibold text-[#0F172A]">{s.students}</td>
-                  <td className="px-5 py-3.5 text-[12px] text-[#94A3B8]">{s.joined}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Recent activity */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-[0_1px_2px_0_rgb(0_0_0/0.04)] p-5">
-          <div className="text-sm font-bold text-[#0F172A] mb-4">Recent Activity</div>
-          <div className="flex flex-col">
-            {ACTIVITY.map((item, i) => (
-              <div key={i} className="flex items-start gap-2.5 py-2.5 border-b border-[#F8FAFC] last:border-0">
-                <div className="w-2 h-2 rounded-full shrink-0 mt-1" style={{ background: DOT[item.type] }} />
-                <div>
-                  <div className="text-[11px] text-[#94A3B8] mb-0.5">{item.time}</div>
-                  <div className="text-[12px] text-[#0F172A] leading-snug">{item.msg}</div>
-                </div>
-              </div>
             ))}
-          </div>
-        </div>
+            {schools.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-5 py-10 text-center text-sm text-[#94A3B8]">
+                  No schools yet.{' '}
+                  <Link href="/admin/schools" className="text-[#3B82F6] hover:underline">Add the first one →</Link>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   )
