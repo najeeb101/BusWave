@@ -127,7 +127,7 @@ export function LoginScreen() {
               Welcome back
             </Text>
             <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 22, fontFamily: 'Inter_400Regular' }}>
-              Sign in — you'll be directed to your dashboard automatically
+              {"Sign in - you'll be directed to your dashboard automatically"}
             </Text>
 
             {/* Email Field */}

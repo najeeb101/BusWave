@@ -14,29 +14,29 @@ export default function InviteScreen() {
   const [role, setRole] = useState<string | null>(null)
 
   useEffect(() => {
+    async function validateInvite(inviteCode: string) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: roleRow } = await supabase
+          .from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle()
+        const userRole = roleRow?.role
+        if (userRole === 'driver') router.replace('/driver' as never)
+        else if (userRole === 'parent') router.replace('/parent' as never)
+        else router.replace('/login' as never)
+        return
+      }
+
+      if (inviteCode.length > 10) {
+        setRole('parent')
+        setState('valid')
+      } else {
+        setState('invalid')
+      }
+    }
+
     if (!code) { setState('invalid'); return }
     validateInvite(code)
-  }, [code])
-
-  async function validateInvite(inviteCode: string) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      const { data: roleRow } = await supabase
-        .from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle()
-      const userRole = roleRow?.role
-      if (userRole === 'driver') router.replace('/driver' as never)
-      else if (userRole === 'parent') router.replace('/parent' as never)
-      else router.replace('/login' as never)
-      return
-    }
-
-    if (inviteCode.length > 10) {
-      setRole('parent')
-      setState('valid')
-    } else {
-      setState('invalid')
-    }
-  }
+  }, [code, router])
 
   function handleAccept() {
     router.replace(`/login?invite=${code}` as never)

@@ -62,7 +62,7 @@ export function ParentNotificationsScreen() {
             <Text style={{ fontSize: 32 }}>🔔</Text>
             <Text style={{ fontSize: 14, color: colors.dark, fontFamily: 'Inter_700Bold' }}>No notifications yet</Text>
             <Text style={{ fontSize: 13, color: colors.subtle, fontFamily: 'Inter_400Regular', textAlign: 'center' }}>
-              You'll see updates from the driver and school here.
+              {"You'll see updates from the driver and school here."}
             </Text>
           </View>
         )}
@@ -115,7 +115,7 @@ export function ParentNotificationsScreen() {
 
         {!loading && announcements.length > 0 && (
           <View style={{ alignItems: 'center', paddingTop: 8, paddingBottom: 16 }}>
-            <Text style={{ fontSize: 12, color: colors.subtle, fontFamily: 'Inter_400Regular' }}>You're all caught up 🎉</Text>
+            <Text style={{ fontSize: 12, color: colors.subtle, fontFamily: 'Inter_400Regular' }}>{"You're all caught up 🎉"}</Text>
           </View>
         )}
       </ScrollView>

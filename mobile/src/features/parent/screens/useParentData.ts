@@ -242,7 +242,7 @@ export function useParentData() {
   }, [refresh])
 
   useEffect(() => {
-    if (!child?.busId) return
+    if (!child?.busId || !child.id) return
     const locationChannel = supabase
       .channel(`parent-bus-location-${child.busId}`)
       .on(
@@ -263,11 +263,21 @@ export function useParentData() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, () => refresh())
       .subscribe()
 
+    const attendanceChannel = supabase
+      .channel(`parent-attendance-${child.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'attendance', filter: `student_id=eq.${child.id}` },
+        () => refresh(),
+      )
+      .subscribe()
+
     return () => {
       supabase.removeChannel(locationChannel)
       supabase.removeChannel(announcementChannel)
+      supabase.removeChannel(attendanceChannel)
     }
-  }, [child?.busId, refresh])
+  }, [child?.busId, child?.id, refresh])
 
   // Fire a push notification once per session when bus is ≤5 min from child's stop
   useEffect(() => {

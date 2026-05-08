@@ -206,7 +206,7 @@ export function ParentHomeScreen() {
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <Text style={{ fontSize: 16 }}>📋</Text>
-            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: colors.dark }}>Today's Updates</Text>
+            <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: colors.dark }}>{"Today's Updates"}</Text>
           </View>
           {loading && (
             <Text style={{ fontSize: 13, color: colors.subtle, fontFamily: 'Inter_500Medium' }}>Loading...</Text>

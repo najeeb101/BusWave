@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -24,7 +24,7 @@ export function DriverHomeScreen() {
   const nextStop = stops.find(stop => !stop.done && !stop.current) ?? stops[stops.length - 1]
   const stopsDone = stops.filter(s => s.done).length
 
-  async function sendCurrentLocation() {
+  const sendCurrentLocation = useCallback(async () => {
     if (!profile?.busId) return
     const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
     const point = `SRID=4326;POINT(${position.coords.longitude} ${position.coords.latitude})`
@@ -35,7 +35,7 @@ export function DriverHomeScreen() {
       speed: position.coords.speed ?? null,
     })
     if (error) throw error
-  }
+  }, [profile?.busId])
 
   async function startTrip() {
     if (!profile?.busId) return
@@ -68,7 +68,7 @@ export function DriverHomeScreen() {
       try { await sendCurrentLocation(); setGpsError(null) } catch { setGpsError('GPS update failed. Retrying...') }
     }, 10000)
     return () => { if (locationIntervalRef.current) { clearInterval(locationIntervalRef.current); locationIntervalRef.current = null } }
-  }, [tripStatus, profile?.busId])
+  }, [tripStatus, profile?.busId, sendCurrentLocation])
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>

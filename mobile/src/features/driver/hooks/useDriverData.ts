@@ -96,11 +96,29 @@ function getLocalDateKey() {
   return `${year}-${month}-${day}`
 }
 
+function deriveStopProgress(stops: DriverStop[], boardedIds: Set<string>, absentIds: Set<string>) {
+  let activeStopAssigned = false
+  const accountedIds = new Set([...boardedIds, ...absentIds])
+  const nextStops = stops.map((stop) => {
+    const done = stop.students.length > 0 && stop.students.every((student) => accountedIds.has(student.id))
+    const current = !done && !activeStopAssigned
+    if (current) activeStopAssigned = true
+    return { ...stop, done, current }
+  })
+
+  if (!activeStopAssigned && nextStops.length > 0) {
+    const lastIndex = nextStops.length - 1
+    nextStops[lastIndex] = { ...nextStops[lastIndex]!, current: true }
+  }
+
+  return nextStops
+}
+
 export function useDriverData() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [profile, setProfile] = useState<DriverBusProfile | null>(null)
-  const [stops, setStops] = useState<DriverStop[]>([])
+  const [baseStops, setBaseStops] = useState<DriverStop[]>([])
   const [messages, setMessages] = useState<DriverMessage[]>([])
   const [boardedIds, setBoardedIds] = useState<Set<string>>(new Set())
   const [absentIds, setAbsentIds] = useState<Set<string>>(new Set())
@@ -175,11 +193,11 @@ export function useDriverData() {
         id: `stop-${idx + 1}`,
         name,
         eta: '--:--',
-        current: idx === 0,
+        current: false,
         done: false,
         students: list,
       }))
-      setStops(stopList)
+      setBaseStops(stopList)
 
       const { data: routeData } = await supabase
         .from('routes')
@@ -248,6 +266,10 @@ export function useDriverData() {
     return () => { supabase.removeChannel(channel) }
   }, [profile?.busId, refresh])
 
+  const stops = useMemo(
+    () => deriveStopProgress(baseStops, boardedIds, absentIds),
+    [baseStops, boardedIds, absentIds],
+  )
   const totalStudents = useMemo(
     () => stops.reduce((total, stop) => total + stop.students.length, 0),
     [stops],
