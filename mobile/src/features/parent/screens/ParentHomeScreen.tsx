@@ -28,11 +28,13 @@ export function ParentHomeScreen() {
   const pill = attendancePill(attendanceStatus)
   const etaDisplay = attendanceStatus === 'boarded'
     ? 'On Bus'
-    : etaMinutes === null
-      ? '--'
-      : etaMinutes <= 1
-        ? 'Arriving'
-        : `~${etaMinutes} min`
+    : attendanceStatus === 'absent'
+      ? 'Absent'
+      : etaMinutes === null
+        ? '--'
+        : etaMinutes <= 1
+          ? 'Arriving'
+          : `~${etaMinutes} min`
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -147,9 +149,11 @@ export function ParentHomeScreen() {
             <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 3 }}>
               {attendanceStatus === 'boarded'
                 ? 'Your child is on the bus'
-                : etaMinutes
-                  ? 'Estimated time based on live GPS'
-                  : 'Waiting for bus GPS to start'}
+                : attendanceStatus === 'absent'
+                  ? 'Your child is marked absent today'
+                  : etaMinutes
+                    ? 'Estimated time based on live GPS'
+                    : 'Waiting for bus GPS to start'}
             </Text>
           </View>
           <TouchableOpacity

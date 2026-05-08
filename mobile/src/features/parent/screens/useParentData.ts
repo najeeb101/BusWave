@@ -281,7 +281,7 @@ export function useParentData() {
 
   // Fire a push notification once per session when bus is ≤5 min from child's stop
   useEffect(() => {
-    if (!busLocation || !child || attendanceStatus === 'boarded' || etaAlertSent.current) return
+    if (!busLocation || !child || attendanceStatus !== null || etaAlertSent.current) return
     const childPoint = routePoints.find((p) => p.studentId === child.id)
     if (!childPoint) return
     const distKm = haversineKm(busLocation.lat, busLocation.lng, childPoint.lat, childPoint.lng)
@@ -292,10 +292,10 @@ export function useParentData() {
         body: { type: 'eta_alert', student_id: child.id },
       }).catch(() => {}) // non-critical, fail silently
     }
-  }, [busLocation]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [attendanceStatus, busLocation, child, routePoints])
 
   const etaMinutes = useMemo(() => {
-    if (!busLocation || !child || attendanceStatus === 'boarded') return null
+    if (!busLocation || !child || attendanceStatus !== null) return null
     const childPoint = routePoints.find((p) => p.studentId === child.id)
     if (!childPoint) return null
     const distKm = haversineKm(busLocation.lat, busLocation.lng, childPoint.lat, childPoint.lng)

@@ -148,11 +148,13 @@ export function ParentMapScreen() {
                   value={
                     attendanceStatus === 'boarded'
                       ? 'On bus'
-                      : etaMinutes === null
-                        ? 'Not yet active'
-                        : etaMinutes <= 1
-                          ? 'Arriving now'
-                          : `~${etaMinutes} min away`
+                      : attendanceStatus === 'absent'
+                        ? 'Absent today'
+                        : etaMinutes === null
+                          ? 'Not yet active'
+                          : etaMinutes <= 1
+                            ? 'Arriving now'
+                            : `~${etaMinutes} min away`
                   }
                   valueColor={etaMinutes !== null && etaMinutes <= 3 ? colors.warning : colors.dark}
                 />
