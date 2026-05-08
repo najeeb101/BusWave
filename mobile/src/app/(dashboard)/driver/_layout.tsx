@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router'
 import { TabIcon } from '@/components/navigation/TabIcon'
 import { colors } from '@/lib/colors'
+import { DriverDataProvider } from '@/features/driver/context/DriverDataContext'
 
 export default function DriverLayout() {
   return (
+    <DriverDataProvider>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -27,5 +29,6 @@ export default function DriverLayout() {
       <Tabs.Screen name="route" options={{ tabBarIcon: ({ focused }) => <TabIcon label="Route" icon="🗺️" focused={focused} activeColor={colors.info} /> }} />
       <Tabs.Screen name="messages" options={{ tabBarIcon: ({ focused }) => <TabIcon label="Messages" icon="💬" focused={focused} activeColor={colors.success} /> }} />
     </Tabs>
+    </DriverDataProvider>
   )
 }

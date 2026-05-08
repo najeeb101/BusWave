@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router'
 import { TabIcon } from '@/components/navigation/TabIcon'
 import { colors } from '@/lib/colors'
+import { ParentDataProvider } from '@/features/parent/context/ParentDataContext'
 
 export default function ParentLayout() {
   return (
+    <ParentDataProvider>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -30,5 +32,6 @@ export default function ParentLayout() {
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Alerts" icon="🔔" focused={focused} activeColor={colors.warning} /> }}
       />
     </Tabs>
+    </ParentDataProvider>
   )
 }

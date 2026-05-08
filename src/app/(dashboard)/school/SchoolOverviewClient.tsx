@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 import { FleetMapSvg } from '@/components/maps/FleetMapSvg'
@@ -87,8 +88,9 @@ export default function SchoolOverviewClient({
       p_bus_id:  announceTo || null,
     })
     setSending(false)
-    if (error) { setSendError(error.message); return }
+    if (error) { setSendError(error.message); toast.error('Failed to send announcement'); return }
     setSent(true)
+    toast.success('Announcement sent')
     await refetchAnnouncements()
   }
 

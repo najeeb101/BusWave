@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 
 export type BusRow = {
@@ -106,6 +107,7 @@ export default function BusesTable({ initialBuses }: { initialBuses: BusRow[] })
     if (err) { setError(err.message); return }
     setAddOpen(false)
     setAddName(''); setAddCapacity('40'); setAddColor(BUS_COLORS[0]!)
+    toast.success('Bus added')
     await refetch()
   }
 
@@ -124,6 +126,7 @@ export default function BusesTable({ initialBuses }: { initialBuses: BusRow[] })
     setLoading(false)
     if (err) { setError(err.message); return }
     setEditBus(null)
+    toast.success('Bus updated')
     await refetch()
   }
 
@@ -134,6 +137,7 @@ export default function BusesTable({ initialBuses }: { initialBuses: BusRow[] })
     setLoading(false)
     if (err) { setError(err.message); return }
     setDeleteBus(null)
+    toast.success('Bus removed')
     await refetch()
   }
 

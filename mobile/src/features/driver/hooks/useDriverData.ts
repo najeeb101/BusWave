@@ -22,6 +22,7 @@ export type DriverBusProfile = {
   busId: string
   busName: string
   routeName: string
+  schoolId: string
   schoolName: string
   driverName: string
 }
@@ -45,6 +46,7 @@ type BusRow = {
   id: string
   name: string
   school_id: string
+  capacity: number | null
 }
 
 type SchoolRow = {
@@ -60,6 +62,7 @@ type StudentRow = {
 
 type AttendanceRow = {
   student_id: string
+  status: 'boarded' | 'absent'
 }
 
 type AnnouncementRow = {
@@ -100,6 +103,8 @@ export function useDriverData() {
   const [stops, setStops] = useState<DriverStop[]>([])
   const [messages, setMessages] = useState<DriverMessage[]>([])
   const [boardedIds, setBoardedIds] = useState<Set<string>>(new Set())
+  const [absentIds, setAbsentIds] = useState<Set<string>>(new Set())
+  const [busCapacity, setBusCapacity] = useState<number>(40)
   const [routePoints, setRoutePoints] = useState<DriverRoutePoint[]>([])
   const [encodedPolyline, setEncodedPolyline] = useState<string | null>(null)
 
@@ -114,7 +119,7 @@ export function useDriverData() {
 
       const { data: busData, error: busErr } = await supabase
         .from('buses')
-        .select('id, name, school_id')
+        .select('id, name, school_id, capacity')
         .eq('driver_id', user.id)
         .limit(1)
         .maybeSingle()
@@ -138,9 +143,11 @@ export function useDriverData() {
         busId: bus.id,
         busName: bus.name,
         routeName: bus.name,
+        schoolId: bus.school_id,
         schoolName: school?.name ?? 'School',
         driverName: rawName,
       })
+      setBusCapacity(bus.capacity ?? 40)
 
       const { data: studentsData, error: studentsErr } = await supabase
         .from('students')
@@ -197,12 +204,12 @@ export function useDriverData() {
       const today = getLocalDateKey()
       const { data: attendanceData } = await supabase
         .from('attendance')
-        .select('student_id')
+        .select('student_id, status')
         .eq('bus_id', bus.id)
         .eq('date', today)
-        .eq('status', 'boarded')
-      const boarded = new Set((attendanceData as AttendanceRow[] | null ?? []).map((a) => a.student_id))
-      setBoardedIds(boarded)
+      const rows = (attendanceData as AttendanceRow[] | null) ?? []
+      setBoardedIds(new Set(rows.filter((a) => a.status === 'boarded').map((a) => a.student_id)))
+      setAbsentIds(new Set(rows.filter((a) => a.status === 'absent').map((a) => a.student_id)))
 
       const { data: announcementsData } = await supabase
         .from('announcements')
@@ -232,6 +239,15 @@ export function useDriverData() {
     refresh()
   }, [refresh])
 
+  useEffect(() => {
+    if (!profile?.busId) return
+    const channel = supabase
+      .channel(`driver-announcements-${profile.busId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, () => refresh())
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [profile?.busId, refresh])
+
   const totalStudents = useMemo(
     () => stops.reduce((total, stop) => total + stop.students.length, 0),
     [stops],
@@ -244,10 +260,13 @@ export function useDriverData() {
     stops,
     totalStudents,
     boardedIds,
+    setBoardedIds,
+    absentIds,
+    setAbsentIds,
+    busCapacity,
     messages,
     routePoints,
     encodedPolyline,
     refresh,
-    setBoardedIds,
   }
 }

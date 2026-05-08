@@ -4,16 +4,10 @@ import { useRouter } from 'expo-router'
 import { Card } from '@/components/primitives/Card'
 import { ScreenHeader } from '@/components/primitives/ScreenHeader'
 import { StatusPill } from '@/components/primitives/StatusPill'
-import { driverProfile, parentChild, parentUpdates } from '@/data/demoRoute'
+import { useParentContext } from '@/features/parent/context/ParentDataContext'
 import { colors } from '@/lib/colors'
 import { routes } from '@/lib/navigation/routes'
 import type { RouteUpdateType } from '@/types/route'
-
-const typeColor: Record<RouteUpdateType, string> = {
-  ok: colors.success,
-  info: colors.info,
-  warn: colors.warning,
-}
 
 const typeIcon: Record<RouteUpdateType, string> = {
   ok: '✅',
@@ -21,8 +15,24 @@ const typeIcon: Record<RouteUpdateType, string> = {
   warn: '⚠️',
 }
 
+function attendancePill(status: 'boarded' | 'absent' | null) {
+  if (status === 'boarded') return { label: 'On Bus', tone: 'success' as const }
+  if (status === 'absent') return { label: 'Absent', tone: 'danger' as const }
+  return { label: 'Waiting', tone: 'warning' as const }
+}
+
 export function ParentHomeScreen() {
   const router = useRouter()
+  const { loading, error, child, attendanceStatus, announcements, etaMinutes } = useParentContext()
+
+  const pill = attendancePill(attendanceStatus)
+  const etaDisplay = attendanceStatus === 'boarded'
+    ? 'On Bus'
+    : etaMinutes === null
+      ? '--'
+      : etaMinutes <= 1
+        ? 'Arriving'
+        : `~${etaMinutes} min`
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -74,15 +84,19 @@ export function ParentHomeScreen() {
               justifyContent: 'center',
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_800ExtraBold', fontSize: 16 }}>{parentChild.initials}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 15 }}>{parentChild.name}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 1 }}>
-              {parentChild.grade} · {parentChild.bus}
+            <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_800ExtraBold', fontSize: 16 }}>
+              {child?.initials ?? '?'}
             </Text>
           </View>
-          <StatusPill label={parentChild.status} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 15 }}>
+              {child?.name ?? (loading ? 'Loading...' : 'No child linked')}
+            </Text>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 1 }}>
+              {child?.busName ?? 'Unassigned'}
+            </Text>
+          </View>
+          {!loading && child && <StatusPill label={pill.label} tone={pill.tone} />}
         </View>
       </View>
 
@@ -91,6 +105,12 @@ export function ParentHomeScreen() {
         contentContainerStyle={{ padding: 16, gap: 12 }}
         showsVerticalScrollIndicator={false}
       >
+        {error && (
+          <View style={{ borderColor: '#FECACA', borderWidth: 1, backgroundColor: '#FEF2F2', borderRadius: 14, padding: 14 }}>
+            <Text style={{ color: '#B91C1C', fontSize: 12, fontFamily: 'Inter_600SemiBold' }}>{error}</Text>
+          </View>
+        )}
+
         {/* ETA Hero Card */}
         <View
           style={{
@@ -119,11 +139,17 @@ export function ParentHomeScreen() {
                 marginBottom: 5,
               }}
             >
-              📍 ETA to School
+              📍 ETA to Your Stop
             </Text>
-            <Text style={{ color: colors.accent, fontFamily: 'Inter_800ExtraBold', fontSize: 32, letterSpacing: -1 }}>8:10 AM</Text>
+            <Text style={{ color: colors.accent, fontFamily: 'Inter_800ExtraBold', fontSize: 32, letterSpacing: -1 }}>
+              {etaDisplay}
+            </Text>
             <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 3 }}>
-              About 19 minutes away
+              {attendanceStatus === 'boarded'
+                ? 'Your child is on the bus'
+                : etaMinutes
+                  ? 'Estimated time based on live GPS'
+                  : 'Waiting for bus GPS to start'}
             </Text>
           </View>
           <TouchableOpacity
@@ -152,10 +178,9 @@ export function ParentHomeScreen() {
           </View>
           <View style={{ gap: 10 }}>
             {([
-              ['Bus', parentChild.bus],
-              ['Route', `${parentChild.route} / Morning`],
-              ['Driver', driverProfile.name],
-              ['School', driverProfile.school],
+              ['Bus', child?.busName ?? '—'],
+              ['Stop', child?.homeAddress ?? '—'],
+              ['School', child?.schoolName ?? '—'],
             ] as [string, string][]).map(([label, value]) => (
               <View
                 key={label}
@@ -169,7 +194,7 @@ export function ParentHomeScreen() {
                 }}
               >
                 <Text style={{ fontSize: 13, color: colors.subtle, fontFamily: 'Inter_500Medium' }}>{label}</Text>
-                <Text style={{ fontSize: 13, color: colors.dark, fontFamily: 'Inter_600SemiBold', flex: 1, textAlign: 'right' }}>
+                <Text style={{ fontSize: 13, color: colors.dark, fontFamily: 'Inter_600SemiBold', flex: 1, textAlign: 'right' }} numberOfLines={1}>
                   {value}
                 </Text>
               </View>
@@ -183,8 +208,14 @@ export function ParentHomeScreen() {
             <Text style={{ fontSize: 16 }}>📋</Text>
             <Text style={{ fontFamily: 'Inter_700Bold', fontSize: 14, color: colors.dark }}>Today's Updates</Text>
           </View>
+          {loading && (
+            <Text style={{ fontSize: 13, color: colors.subtle, fontFamily: 'Inter_500Medium' }}>Loading...</Text>
+          )}
+          {!loading && announcements.length === 0 && (
+            <Text style={{ fontSize: 13, color: colors.subtle, fontFamily: 'Inter_400Regular' }}>No updates yet today.</Text>
+          )}
           <View style={{ gap: 12 }}>
-            {parentUpdates.slice(0, 3).map(update => (
+            {announcements.slice(0, 3).map(update => (
               <View key={update.id} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
                 <Text style={{ fontSize: 14, marginTop: -1 }}>{typeIcon[update.type]}</Text>
                 <Text style={{ width: 46, fontSize: 11, color: colors.subtle, fontFamily: 'Inter_500Medium' }}>{update.time}</Text>
@@ -196,26 +227,17 @@ export function ParentHomeScreen() {
           </View>
         </Card>
 
-        {/* Contact Driver Button */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: colors.dark,
-            borderRadius: 20,
-            padding: 16,
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 10,
-            shadowColor: colors.dark,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 12,
-            elevation: 4,
-          }}
-        >
-          <Text style={{ fontSize: 18 }}>📞</Text>
-          <Text style={{ color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 15, letterSpacing: 0.2 }}>Contact Driver</Text>
-        </TouchableOpacity>
+        {/* View all link */}
+        {announcements.length > 3 && (
+          <TouchableOpacity
+            onPress={() => router.push(routes.parentNotifications)}
+            style={{ alignItems: 'center', paddingVertical: 8 }}
+          >
+            <Text style={{ fontSize: 13, color: colors.primary, fontFamily: 'Inter_600SemiBold' }}>
+              View all {announcements.length} updates →
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   )

@@ -7,7 +7,7 @@ import { MetricCard } from '@/components/primitives/MetricCard'
 import { ProgressBar } from '@/components/primitives/ProgressBar'
 import { ScreenHeader } from '@/components/primitives/ScreenHeader'
 import { StatusPill } from '@/components/primitives/StatusPill'
-import { useDriverData } from '@/features/driver/hooks/useDriverData'
+import { useDriverContext } from '@/features/driver/context/DriverDataContext'
 import { colors } from '@/lib/colors'
 import { routes } from '@/lib/navigation/routes'
 import { supabase } from '@/lib/supabase'
@@ -15,7 +15,7 @@ import type { TripStatus } from '@/types/route'
 
 export function DriverHomeScreen() {
   const router = useRouter()
-  const { loading, error, profile, stops, totalStudents, boardedIds } = useDriverData()
+  const { loading, error, profile, stops, totalStudents, boardedIds, absentIds, busCapacity } = useDriverContext()
   const [tripStatus, setTripStatus] = useState<TripStatus>('idle')
   const [gpsError, setGpsError] = useState<string | null>(null)
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -132,6 +132,25 @@ export function DriverHomeScreen() {
               ? `${totalStudents - boarded} student${totalStudents - boarded === 1 ? '' : 's'} not yet boarded`
               : 'All students boarded ✓'}
           </Text>
+
+          {/* Bus capacity bar */}
+          <View style={{ marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.borderLight }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ fontSize: 12, color: colors.subtle, fontFamily: 'Inter_600SemiBold' }}>Bus Capacity</Text>
+              <Text style={{ fontSize: 12, fontFamily: 'Inter_700Bold', color: boarded > busCapacity * 0.9 ? colors.danger : colors.muted }}>
+                {boarded} / {busCapacity} seats
+              </Text>
+            </View>
+            {(() => {
+              const pct = busCapacity > 0 ? Math.min(100, Math.round((boarded / busCapacity) * 100)) : 0
+              const fillColor = boarded > busCapacity * 0.9 ? colors.danger : boarded > busCapacity * 0.75 ? colors.warning : colors.success
+              return (
+                <View style={{ height: 6, backgroundColor: colors.borderLight, borderRadius: 3, overflow: 'hidden' }}>
+                  <View style={{ height: '100%', width: `${pct}%`, backgroundColor: fillColor, borderRadius: 3 }} />
+                </View>
+              )
+            })()}
+          </View>
         </View>
 
         {/* Current stop hero */}
@@ -176,8 +195,8 @@ export function DriverHomeScreen() {
         {/* Metrics row */}
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <MetricCard label="Stops Done" value={`${stopsDone}/${stops.length}`} color={colors.success} icon="✓" />
-          <MetricCard label="Absent" value="0" color={colors.danger} icon="✕" />
-          <MetricCard label="ETA School" value="8:10" color={colors.primary} icon="🏫" />
+          <MetricCard label="Absent" value={String(absentIds.size)} color={colors.danger} icon="✕" />
+          <MetricCard label="ETA School" value={stops[stops.length - 1]?.eta ?? '--:--'} color={colors.primary} icon="🏫" />
         </View>
 
         {/* Full route CTA */}

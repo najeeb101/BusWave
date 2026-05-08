@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import type { BusRow } from '../buses/BusesTable'
 
@@ -186,6 +187,7 @@ export default function StudentsTable({
     if (err) { setError(err.message); return }
     setAddOpen(false)
     setAddName(''); setAddAddress(''); setAddBusId('')
+    toast.success('Student added')
     await triggerOptimization(students[0]?.school_id)
     await refetch()
   }
@@ -203,6 +205,7 @@ export default function StudentsTable({
     setLoading(false)
     if (err) { setError(err.message); return }
     setEditStudent(null)
+    toast.success('Student updated')
     await refetch()
   }
 
@@ -217,6 +220,7 @@ export default function StudentsTable({
     if (err) { setError(err.message); return }
     await triggerOptimization(changeBusStudent.school_id)
     setChangeBusStudent(null)
+    toast.success('Bus reassigned')
     await refetch()
   }
 
@@ -228,6 +232,7 @@ export default function StudentsTable({
     if (err) { setError(err.message); return }
     await triggerOptimization(deleteStudent.school_id)
     setDeleteStudent(null)
+    toast.success('Student removed')
     await refetch()
   }
 

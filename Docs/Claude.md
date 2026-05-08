@@ -410,11 +410,15 @@ CREATE POLICY "Parent reads own child's attendance" ON attendance FOR SELECT
 - Capacity alerts when bus > 40 students
 
 ### Phase 7: Bus Driver Interface
-- Mobile-first layout emphasizing turn-by-turn navigation follow-along
-- Show assigned route + passenger manifest
-- Feature digital attendance checklist (Boarded / Absent log)
-- "Start Route" button → simulated GPS broadcasting
-- Push Announcements: Send real-time text updates securely to parents on that route
+- Mobile-first layout, one-handed operation — no map, no navigation (drivers know their roads)
+- **Next pickup card**: large card showing the next student's name + address; auto-advances when marked Boarded or Absent
+- **Progress indicator**: "X of Y students picked up" — always visible at the top
+- **Passenger manifest**: ordered list of all students with stop addresses for the full run
+- **Digital attendance checklist**: tap each student to mark Boarded / Absent; drives the next pickup card
+- **GPS broadcast status**: prominent "Live" badge so the driver knows parents can see their location
+- **Bus capacity bar**: seats filled vs. total capacity (e.g. 18 / 40)
+- **"Start Route" / "End Route" button**: triggers and stops GPS broadcasting to parents
+- **Push Announcements**: send real-time text updates to parents on that route
 
 ### Phase 8: Parent Tracking View
 - Full-screen Mapbox map (mobile-first)

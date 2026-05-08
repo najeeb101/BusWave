@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { FleetMapSvg } from '@/components/maps/FleetMapSvg'
 import type { RouteRow } from './page'
@@ -65,9 +66,10 @@ export default function RoutesClient({ initialRoutes }: { initialRoutes: RouteRo
     const { error } = await supabase.functions.invoke('optimize-route', { body: { school_id: schoolId } })
     setAllLoading(false)
     if (error) {
-      console.error('Optimize all error:', error)
+      toast.error('Optimization failed', { description: error.message })
       return
     }
+    toast.success('All routes optimized')
     router.refresh()
   }
 

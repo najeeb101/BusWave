@@ -14,15 +14,6 @@ import { useRouter } from 'expo-router'
 import { colors } from '@/lib/colors'
 import { routes } from '@/lib/navigation/routes'
 import { supabase } from '@/lib/supabase'
-import type { Role } from '@/types/route'
-
-const hasSupabaseEnv = Boolean(process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY)
-
-type RoleOption = { role: Role; label: string; icon: string; color: string; bg: string; border: string }
-const ROLE_OPTIONS: RoleOption[] = [
-  { role: 'parent', label: 'Parent', icon: '👨‍👧', color: colors.info, bg: colors.infoBg, border: 'rgba(59,130,246,0.35)' },
-  { role: 'driver', label: 'Driver', icon: '🚌', color: colors.success, bg: colors.successBg, border: 'rgba(16,185,129,0.35)' },
-]
 
 export function LoginScreen() {
   const router = useRouter()
@@ -31,27 +22,48 @@ export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [selectedRole, setSelectedRole] = useState<Role>('parent')
   const [emailFocused, setEmailFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
 
   async function handleLogin() {
+    if (!email.trim() || !password) {
+      setError('Please enter your email and password.')
+      return
+    }
     setError('')
     setLoading(true)
 
-    if (hasSupabaseEnv && email && password) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) {
-        setError('Sign in failed. Check your email and password.')
-        setLoading(false)
-        return
-      }
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 600))
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    })
+    if (signInError) {
+      setError('Sign in failed. Check your email and password.')
+      setLoading(false)
+      return
     }
 
+    const { data: roleData, error: roleErr } = await supabase
+      .from('user_roles')
+      .select('role')
+      .maybeSingle()
+
     setLoading(false)
-    router.replace(selectedRole === 'driver' ? routes.driverHome : routes.parentHome)
+
+    if (roleErr || !roleData) {
+      setError('Account not configured. Please use your invite link to register.')
+      await supabase.auth.signOut()
+      return
+    }
+
+    if (roleData.role === 'driver') {
+      router.replace(routes.driverHome)
+    } else if (roleData.role === 'parent') {
+      router.replace(routes.parentHome)
+    } else {
+      setError('This app is for drivers and parents only. Please use the web dashboard.')
+      await supabase.auth.signOut()
+    }
   }
 
   return (
@@ -64,7 +76,6 @@ export function LoginScreen() {
         >
           {/* ── Brand Header ── */}
           <View style={{ alignItems: 'center', paddingTop: 52, paddingBottom: 36 }}>
-            {/* App icon */}
             <View
               style={{
                 width: 80,
@@ -92,7 +103,6 @@ export function LoginScreen() {
               Smart routing · Real-time tracking
             </Text>
 
-            {/* Decorative dots */}
             <View style={{ flexDirection: 'row', gap: 5, marginTop: 18 }}>
               {[colors.accent, 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)'].map((c, i) => (
                 <View key={i} style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c }} />
@@ -117,73 +127,12 @@ export function LoginScreen() {
               Welcome back
             </Text>
             <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 22, fontFamily: 'Inter_400Regular' }}>
-              Sign in to your account to continue
+              Sign in — you'll be directed to your dashboard automatically
             </Text>
-
-            {/* Role Selector */}
-            <Text
-              style={{
-                fontSize: 10,
-                fontFamily: 'Inter_700Bold',
-                color: colors.subtle,
-                marginBottom: 8,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-              }}
-            >
-              I am a
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 22 }}>
-              {ROLE_OPTIONS.map(item => {
-                const active = selectedRole === item.role
-                return (
-                  <TouchableOpacity
-                    key={item.role}
-                    onPress={() => setSelectedRole(item.role)}
-                    activeOpacity={0.75}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 12,
-                      paddingHorizontal: 12,
-                      borderRadius: 14,
-                      borderWidth: 1.5,
-                      borderColor: active ? item.color : colors.border,
-                      backgroundColor: active ? item.bg : '#FAFAFA',
-                      alignItems: 'center',
-                      gap: 4,
-                      shadowColor: active ? item.color : 'transparent',
-                      shadowOpacity: active ? 0.2 : 0,
-                      shadowRadius: 8,
-                      shadowOffset: { width: 0, height: 3 },
-                    }}
-                  >
-                    <Text style={{ fontSize: 22 }}>{item.icon}</Text>
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        fontFamily: active ? 'Inter_700Bold' : 'Inter_500Medium',
-                        color: active ? item.color : colors.muted,
-                      }}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
 
             {/* Email Field */}
             <View style={{ marginBottom: 14 }}>
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontFamily: 'Inter_700Bold',
-                  color: colors.subtle,
-                  marginBottom: 7,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1,
-                }}
-              >
+              <Text style={{ fontSize: 10, fontFamily: 'Inter_700Bold', color: colors.subtle, marginBottom: 7, textTransform: 'uppercase', letterSpacing: 1 }}>
                 Email
               </Text>
               <View
@@ -207,29 +156,14 @@ export function LoginScreen() {
                   autoCapitalize="none"
                   onFocus={() => setEmailFocused(true)}
                   onBlur={() => setEmailFocused(false)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 13,
-                    fontSize: 14,
-                    color: colors.dark,
-                    fontFamily: 'Inter_400Regular',
-                  }}
+                  style={{ flex: 1, paddingVertical: 13, fontSize: 14, color: colors.dark, fontFamily: 'Inter_400Regular' }}
                 />
               </View>
             </View>
 
             {/* Password Field */}
             <View style={{ marginBottom: 20 }}>
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontFamily: 'Inter_700Bold',
-                  color: colors.subtle,
-                  marginBottom: 7,
-                  textTransform: 'uppercase',
-                  letterSpacing: 1,
-                }}
-              >
+              <Text style={{ fontSize: 10, fontFamily: 'Inter_700Bold', color: colors.subtle, marginBottom: 7, textTransform: 'uppercase', letterSpacing: 1 }}>
                 Password
               </Text>
               <View
@@ -252,13 +186,7 @@ export function LoginScreen() {
                   secureTextEntry={!showPassword}
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 13,
-                    fontSize: 14,
-                    color: colors.dark,
-                    fontFamily: 'Inter_400Regular',
-                  }}
+                  style={{ flex: 1, paddingVertical: 13, fontSize: 14, color: colors.dark, fontFamily: 'Inter_400Regular' }}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Text style={{ color: colors.muted, fontSize: 14, fontFamily: 'Inter_500Medium' }}>
@@ -317,11 +245,11 @@ export function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* ── Demo Shortcuts ── */}
+          {/* ── Dev shortcuts (remove before production) ── */}
           <View style={{ marginTop: 24 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter_500Medium' }}>Demo shortcuts</Text>
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter_500Medium' }}>Dev shortcuts</Text>
               <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.08)' }} />
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -340,7 +268,7 @@ export function LoginScreen() {
                 }}
               >
                 <Text style={{ fontSize: 20 }}>🚌</Text>
-                <Text style={{ color: colors.success, fontFamily: 'Inter_600SemiBold', fontSize: 12 }}>Driver Demo</Text>
+                <Text style={{ color: colors.success, fontFamily: 'Inter_600SemiBold', fontSize: 12 }}>Driver UI</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => router.replace(routes.parentHome)}
@@ -357,12 +285,11 @@ export function LoginScreen() {
                 }}
               >
                 <Text style={{ fontSize: 20 }}>👨‍👧</Text>
-                <Text style={{ color: colors.info, fontFamily: 'Inter_600SemiBold', fontSize: 12 }}>Parent Demo</Text>
+                <Text style={{ color: colors.info, fontFamily: 'Inter_600SemiBold', fontSize: 12 }}>Parent UI</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Footer */}
           <Text style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 24, fontFamily: 'Inter_400Regular' }}>
             RouteyAI · Doha, Qatar
           </Text>

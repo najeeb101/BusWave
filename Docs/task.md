@@ -84,48 +84,51 @@ Mobile: Expo (React Native) | NativeWind | Mapbox RN | EAS
 - [x] Build shared auth screens (login)
 - [x] Role-based navigation guard: driver and parent stacks
 - [x] Add migration `0011_push_tokens.sql` with `push_token` in `user_roles`
-- [ ] Register and save `expo-notifications` device token on app launch
+- [x] Register and save `expo-notifications` device token on app launch
 - [x] EAS project setup (`eas.json`, `app.json`, link to expo.dev)
 
 ## Phase 8: Expo - Driver Interface
 
 - [x] Driver home screen (UI only — demo data)
 - [x] Passenger manifest screen (UI only — demo data, inside route screen)
-- [ ] Connect driver screens to real Supabase data (replace demo data)
-- [ ] Route map screen with optimized route polyline and stop markers
-- [ ] Attendance writes to `attendance`
-- [ ] Start Route GPS broadcasting with `expo-location`
-- [ ] GPS writes to `bus_locations`
-- [ ] Stop Route flow and bus status update
-- [ ] Driver announcements to parents
-- [ ] Realtime subscription to School Admin announcements (messages screen exists — demo data)
+- [x] Connect driver screens to real Supabase data (replace demo data)
+- [x] Next pickup card: student name + address, auto-advances on attendance mark
+- [x] Progress indicator: "X of Y students picked up" at top of screen
+- [x] GPS broadcast status badge ("Live" indicator while route is active)
+- [x] Bus capacity bar: seats filled vs. total capacity
+- [x] Attendance writes to `attendance` (Boarded / Absent per student)
+- [x] Start Route GPS broadcasting with `expo-location`
+- [x] GPS writes to `bus_locations`
+- [x] Stop Route flow and bus status update
+- [x] Driver announcements to parents
+- [x] Realtime subscription to School Admin announcements (messages screen exists — demo data)
 
 ## Phase 9: Expo - Parent Interface
 
 - [x] Parent home screen
-- [ ] Full-screen map with live bus marker and child stop
-- [ ] Realtime tracking subscription for child bus
-- [ ] ETA calculation to child stop
-- [ ] Bottom sheet with child/bus/ETA/attendance
-- [ ] Realtime announcements feed
-- [ ] Attendance confirmation state
+- [x] Full-screen map with live bus marker and child stop
+- [x] Realtime tracking subscription for child bus
+- [x] ETA calculation to child stop
+- [x] Bottom sheet with child/bus/ETA/attendance
+- [x] Realtime announcements feed
+- [x] Attendance confirmation state
 
 ## Phase 10: Push Notifications
 
-- [ ] Edge function `supabase/functions/send-notification/index.ts`
-- [ ] Parent notification on boarded/absent
-- [ ] Driver notification on admin announcement
-- [ ] Parent ETA threshold alerts
-- [ ] Handle Expo push receipts and invalid token cleanup
+- [x] Edge function `supabase/functions/send-notification/index.ts`
+- [x] Parent notification on boarded/absent
+- [x] Driver notification on admin announcement
+- [x] Parent ETA threshold alerts
+- [x] Handle Expo push receipts and invalid token cleanup
 
 ## Phase 11: Web Polish and Production
 
 - [x] Dark mode support (web)
-- [ ] `loading.tsx` and `error.tsx` for route segments
-- [ ] Toast notifications for all user actions (shadcn Sonner)
-- [ ] Error boundaries and custom 404 page
-- [ ] Lazy load Mapbox with `next/dynamic` and `ssr: false`
-- [ ] SEO meta tags on all pages
+- [x] `loading.tsx` and `error.tsx` for route segments
+- [x] Toast notifications for all user actions (shadcn Sonner)
+- [x] Error boundaries and custom 404 page
+- [x] Lazy load Mapbox with `next/dynamic` and `ssr: false` (N/A — web uses SVG maps, no mapbox-gl imports)
+- [x] SEO meta tags on all pages
 - [ ] Performance audit (Lighthouse)
 - [ ] Connect custom domain on Vercel
 

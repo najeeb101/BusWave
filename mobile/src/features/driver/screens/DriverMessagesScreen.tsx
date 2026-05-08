@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScreenHeader } from '@/components/primitives/ScreenHeader'
-import { useDriverData } from '@/features/driver/hooks/useDriverData'
+import { useDriverContext } from '@/features/driver/context/DriverDataContext'
 import { colors } from '@/lib/colors'
 import { supabase } from '@/lib/supabase'
 import type { RouteUpdateType } from '@/types/route'
@@ -14,7 +14,33 @@ const typeMeta: Record<RouteUpdateType, { color: string; bg: string; border: str
 }
 
 export function DriverMessagesScreen() {
-  const { loading, error, profile, messages, refresh } = useDriverData()
+  const { loading, error, profile, messages, refresh } = useDriverContext()
+  const [compose, setCompose] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+
+  async function sendAnnouncement() {
+    const text = compose.trim()
+    if (!text || !profile) return
+    setSending(true)
+    setSendError(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { error } = await supabase.from('announcements').insert({
+        school_id: profile.schoolId,
+        bus_id: profile.busId,
+        sender_id: user?.id ?? null,
+        message: text,
+      })
+      if (error) throw error
+      setCompose('')
+      refresh()
+    } catch {
+      setSendError('Failed to send. Please try again.')
+    } finally {
+      setSending(false)
+    }
+  }
 
   useEffect(() => {
     if (!profile?.busId) return
@@ -29,6 +55,7 @@ export function DriverMessagesScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScreenHeader title="Messages" subtitle={`From ${profile?.schoolName ?? 'School'} Admin`} />
 
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
         {error && (
           <View style={{ borderColor: '#FECACA', borderWidth: 1, backgroundColor: '#FEF2F2', borderRadius: 14, padding: 14 }}>
@@ -95,6 +122,59 @@ export function DriverMessagesScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Compose bar — driver sends announcements to parents on this bus */}
+      <View
+        style={{
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          padding: 12,
+          gap: 8,
+        }}
+      >
+        {sendError && (
+          <Text style={{ fontSize: 11, color: colors.danger, fontFamily: 'Inter_500Medium', paddingHorizontal: 4 }}>{sendError}</Text>
+        )}
+        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
+          <TextInput
+            value={compose}
+            onChangeText={setCompose}
+            placeholder="Send update to parents on this bus…"
+            placeholderTextColor={colors.subtle}
+            multiline
+            style={{
+              flex: 1,
+              backgroundColor: colors.background,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 14,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              fontSize: 13,
+              fontFamily: 'Inter_400Regular',
+              color: colors.dark,
+              maxHeight: 80,
+            }}
+          />
+          <TouchableOpacity
+            onPress={sendAnnouncement}
+            disabled={!compose.trim() || sending}
+            activeOpacity={0.8}
+            style={{
+              backgroundColor: compose.trim() && !sending ? colors.primary : colors.borderLight,
+              borderRadius: 14,
+              width: 44,
+              height: 44,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>{sending ? '…' : '▶'}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

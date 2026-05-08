@@ -4,7 +4,7 @@ import Mapbox from '@rnmapbox/maps'
 import { ScreenHeader } from '@/components/primitives/ScreenHeader'
 import { StatusPill } from '@/components/primitives/StatusPill'
 import { colors } from '@/lib/colors'
-import { useParentData } from './useParentData'
+import { useParentContext } from '@/features/parent/context/ParentDataContext'
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_TOKEN ?? '')
 
@@ -30,7 +30,7 @@ const attendanceTone: Record<string, { label: string; color: string; bg: string 
 }
 
 export function ParentMapScreen() {
-  const { loading, error, child, routePoints, encodedPolyline, busLocation, attendanceStatus } = useParentData()
+  const { loading, error, child, routePoints, encodedPolyline, busLocation, attendanceStatus, etaMinutes } = useParentContext()
   const mapCoordinates = encodedPolyline
     ? decodePolyline(encodedPolyline)
     : routePoints.map((p) => [p.lng, p.lat] as [number, number])
@@ -142,6 +142,20 @@ export function ParentMapScreen() {
               <View style={{ gap: 10 }}>
                 <InfoRow icon="🚌" label="Bus" value={child?.busName ?? 'Unassigned'} />
                 <InfoRow icon="📍" label="GPS" value={busLocation ? 'Live tracking active' : 'Waiting for GPS updates'} valueColor={busLocation ? colors.success : colors.subtle} />
+                <InfoRow
+                  icon="⏱️"
+                  label="ETA"
+                  value={
+                    attendanceStatus === 'boarded'
+                      ? 'On bus'
+                      : etaMinutes === null
+                        ? 'Not yet active'
+                        : etaMinutes <= 1
+                          ? 'Arriving now'
+                          : `~${etaMinutes} min away`
+                  }
+                  valueColor={etaMinutes !== null && etaMinutes <= 3 ? colors.warning : colors.dark}
+                />
                 <InfoRow icon="🛑" label="Stops" value={`${routePoints.length} on this route`} />
               </View>
             </View>

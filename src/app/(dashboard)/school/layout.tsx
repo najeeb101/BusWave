@@ -1,5 +1,10 @@
+import type { Metadata } from 'next'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { TopBar } from '@/components/dashboard/TopBar'
+
+export const metadata: Metadata = {
+  title: 'School Dashboard',
+}
 
 export default function SchoolLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -3,7 +3,7 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Mapbox from '@rnmapbox/maps'
 import { ScreenHeader } from '@/components/primitives/ScreenHeader'
-import { useDriverData } from '@/features/driver/hooks/useDriverData'
+import { useDriverContext } from '@/features/driver/context/DriverDataContext'
 import { colors } from '@/lib/colors'
 import { supabase } from '@/lib/supabase'
 
@@ -32,7 +32,7 @@ function getLocalDateKey() {
 }
 
 export function DriverRouteScreen() {
-  const { loading, error, profile, stops, boardedIds, setBoardedIds, routePoints, encodedPolyline } = useDriverData()
+  const { loading, error, profile, stops, boardedIds, setBoardedIds, absentIds, setAbsentIds, routePoints, encodedPolyline } = useDriverContext()
   const [savingId, setSavingId] = useState<string | null>(null)
   const mapCoordinates = encodedPolyline
     ? decodePolyline(encodedPolyline)
@@ -41,24 +41,31 @@ export function DriverRouteScreen() {
   const totalStudents = stops.reduce((sum, s) => sum + s.students.length, 0)
   const boardedCount = boardedIds.size
 
-  async function toggleChecked(id: string) {
+  async function markStudent(id: string, status: 'boarded' | 'absent') {
     if (!profile || savingId) return
     const today = getLocalDateKey()
     const wasBoarded = boardedIds.has(id)
+    const wasAbsent = absentIds.has(id)
+    const isUnmarking = (status === 'boarded' && wasBoarded) || (status === 'absent' && wasAbsent)
+
     setSavingId(id)
-    setBoardedIds((prev) => { const next = new Set(prev); if (wasBoarded) next.delete(id); else next.add(id); return next })
+    // Optimistic update
+    setBoardedIds((prev) => { const n = new Set(prev); if (status === 'boarded' && !isUnmarking) n.add(id); else n.delete(id); return n })
+    setAbsentIds((prev) => { const n = new Set(prev); if (status === 'absent' && !isUnmarking) n.add(id); else n.delete(id); return n })
+
     try {
-      if (wasBoarded) {
-        const { error } = await supabase.from('attendance').delete()
-          .eq('student_id', id).eq('bus_id', profile.busId).eq('date', today)
-        if (error) throw error
-      } else {
+      // Always delete existing record first to avoid duplicates
+      await supabase.from('attendance').delete()
+        .eq('student_id', id).eq('bus_id', profile.busId).eq('date', today)
+      if (!isUnmarking) {
         const { error } = await supabase.from('attendance')
-          .insert({ student_id: id, bus_id: profile.busId, status: 'boarded', date: today })
+          .insert({ student_id: id, bus_id: profile.busId, status, date: today })
         if (error) throw error
       }
     } catch {
-      setBoardedIds((prev) => { const next = new Set(prev); if (wasBoarded) next.add(id); else next.delete(id); return next })
+      // Revert optimistic update
+      setBoardedIds((prev) => { const n = new Set(prev); if (wasBoarded) n.add(id); else n.delete(id); return n })
+      setAbsentIds((prev) => { const n = new Set(prev); if (wasAbsent) n.add(id); else n.delete(id); return n })
     } finally {
       setSavingId(null)
     }
@@ -226,8 +233,8 @@ export function DriverRouteScreen() {
           )}
 
           {stops.map((stop, index) => {
-            const stopDone = stop.students.length > 0 && stop.students.every((s) => boardedIds.has(s.id))
-            const hasActiveStopBefore = stops.slice(0, index).some((ps) => ps.students.length > 0 && !ps.students.every((s) => boardedIds.has(s.id)))
+            const stopDone = stop.students.length > 0 && stop.students.every((s) => boardedIds.has(s.id) || absentIds.has(s.id))
+            const hasActiveStopBefore = stops.slice(0, index).some((ps) => ps.students.length > 0 && !ps.students.every((s) => boardedIds.has(s.id) || absentIds.has(s.id)))
             const isCurrent = !stopDone && stop.students.length > 0 && !hasActiveStopBefore
 
             return (
@@ -297,14 +304,17 @@ export function DriverRouteScreen() {
 
                 {/* Student rows */}
                 {stop.students.map((student) => {
-                  const isChecked = boardedIds.has(student.id)
+                  const isBoarded = boardedIds.has(student.id)
+                  const isAbsent = absentIds.has(student.id)
                   const isSaving = savingId === student.id
+                  const rowBg = isBoarded ? 'rgba(16,185,129,0.04)' : isAbsent ? 'rgba(239,68,68,0.04)' : 'transparent'
+                  const avatarBg = isBoarded ? colors.successBg : isAbsent ? colors.dangerBg : colors.infoBg
+                  const avatarBorder = isBoarded ? 'rgba(16,185,129,0.3)' : isAbsent ? 'rgba(239,68,68,0.3)' : '#BFDBFE'
+                  const avatarColor = isBoarded ? colors.success : isAbsent ? colors.danger : colors.primary
+                  const nameColor = (isBoarded || isAbsent) ? colors.muted : colors.dark
                   return (
-                    <TouchableOpacity
+                    <View
                       key={student.id}
-                      onPress={() => !stopDone && !isSaving && toggleChecked(student.id)}
-                      disabled={stopDone || isSaving}
-                      activeOpacity={0.7}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -313,7 +323,8 @@ export function DriverRouteScreen() {
                         borderTopWidth: 1,
                         borderTopColor: colors.borderLight,
                         gap: 10,
-                        backgroundColor: isChecked ? 'rgba(16,185,129,0.04)' : 'transparent',
+                        backgroundColor: rowBg,
+                        opacity: isSaving ? 0.6 : 1,
                       }}
                     >
                       {/* Avatar */}
@@ -321,41 +332,69 @@ export function DriverRouteScreen() {
                         width: 36,
                         height: 36,
                         borderRadius: 18,
-                        backgroundColor: isChecked ? colors.successBg : colors.infoBg,
+                        backgroundColor: avatarBg,
                         borderWidth: 1.5,
-                        borderColor: isChecked ? 'rgba(16,185,129,0.3)' : '#BFDBFE',
+                        borderColor: avatarBorder,
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}>
-                        <Text style={{ fontSize: 12, fontFamily: 'Inter_700Bold', color: isChecked ? colors.success : colors.primary }}>
+                        <Text style={{ fontSize: 12, fontFamily: 'Inter_700Bold', color: avatarColor }}>
                           {student.initials}
                         </Text>
                       </View>
 
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: isChecked ? colors.muted : colors.dark }}>
+                        <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: nameColor }}>
                           {student.name}
                         </Text>
                         <Text style={{ fontSize: 11, color: colors.subtle, fontFamily: 'Inter_400Regular' }}>{student.grade}</Text>
                       </View>
 
-                      {/* Check-in badge */}
-                      <View style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 20,
-                        backgroundColor: isChecked ? colors.successBg : colors.warningBg,
-                        borderWidth: 1,
-                        borderColor: isChecked ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)',
-                        opacity: isSaving ? 0.6 : 1,
-                        minWidth: 72,
-                        alignItems: 'center',
-                      }}>
-                        <Text style={{ fontSize: 12, fontFamily: 'Inter_700Bold', color: isChecked ? colors.successMid : '#D97706' }}>
-                          {isSaving ? '...' : isChecked ? '✓ Boarded' : 'Board'}
-                        </Text>
+                      {/* Action buttons */}
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <TouchableOpacity
+                          onPress={() => !isSaving && markStudent(student.id, 'boarded')}
+                          disabled={isSaving}
+                          activeOpacity={0.7}
+                          style={{
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 16,
+                            backgroundColor: isBoarded ? colors.successBg : colors.borderLight,
+                            borderWidth: 1,
+                            borderColor: isBoarded ? 'rgba(16,185,129,0.3)' : colors.border,
+                            minWidth: 64,
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', color: isBoarded ? colors.successMid : colors.muted }}>
+                            {isBoarded ? '✓ Boarded' : 'Board'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {!isBoarded && (
+                          <TouchableOpacity
+                            onPress={() => !isSaving && markStudent(student.id, 'absent')}
+                            disabled={isSaving}
+                            activeOpacity={0.7}
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 6,
+                              borderRadius: 16,
+                              backgroundColor: isAbsent ? colors.dangerBg : colors.borderLight,
+                              borderWidth: 1,
+                              borderColor: isAbsent ? 'rgba(239,68,68,0.3)' : colors.border,
+                              minWidth: 56,
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Text style={{ fontSize: 11, fontFamily: 'Inter_700Bold', color: isAbsent ? colors.danger : colors.muted }}>
+                              {isAbsent ? '✕ Absent' : 'Absent'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
-                    </TouchableOpacity>
+                    </View>
                   )
                 })}
               </View>
